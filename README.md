@@ -1,4 +1,5 @@
 # attendance_system
+<<<<<<< HEAD
 
 A new Flutter project.
 
@@ -14,3 +15,6 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+attendance system
+>>>>>>> 02917ff100b41dabd2fa72ac5e410e4929863d6a
