@@ -1,20 +1,56 @@
-# attendance_system
-<<<<<<< HEAD
+# Attendance System
 
-A new Flutter project.
+An open-source **Flutter** application for managing employee attendance, built to simplify time tracking and attendance management for organizations of any size.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
 
-A few resources to get you started if this is your first Flutter project:
+✅ Employee Registration  
+✅ Attendance Marking (Check-In / Check-Out)  
+✅ Attendance Reports  
+✅ Leave Management  
+✅ Salary Calculation / Reports  
+✅ Data Visualization (Charts, Graphs)  
+✅ Role-Based Access (Admin / Employee)  
+✅ Responsive UI  
+✅ Works on Android & iOS  
+✅ Easy to integrate with backend APIs
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-=======
-attendance system
->>>>>>> 02917ff100b41dabd2fa72ac5e410e4929863d6a
+## 🎯 Why Use This Project?
+
+- Built entirely in Flutter – single codebase for mobile apps  
+- Simple, modern UI  
+- Modular architecture for easy customization  
+- Designed for real-world use in offices, factories, schools, etc.  
+- Fully open-source for learning and contribution
+
+---
+
+## 🛠️ Getting Started
+
+This project requires:
+
+- **Flutter** (latest stable)
+- **Node.js** (v18.x or newer recommended)
+- **PostgreSQL** database
+
+Below are detailed instructions for both Windows and macOS.
+
+---
+
+## 🖥️ Setup Guide
+
+### ✅ Windows Setup
+
+#### 1. Install Flutter
+
+- Download Flutter from [flutter.dev](https://docs.flutter.dev/get-started/install/windows)
+- Add Flutter to your System `PATH`
+
+Check version:
+
+```powershell
+flutter --version
