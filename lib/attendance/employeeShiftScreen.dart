@@ -193,7 +193,7 @@ class _EmployeeShiftScreenState extends State<EmployeeShiftScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Employee Shifts"),
-
+        backgroundColor: const Color(0xFF2E3B55),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

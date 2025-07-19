@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { registerEmployee } = require('../controller/employeeController');
-const { markAttendance } = require('../controller/attendanceController');
+const { markAttendance, gridSummary, attendanceDetails
+
+} = require('../controller/attendanceController');
 const { giveSalaryAdvance } = require('../controller/salaryAdvanceController');
 const { getDashboardStats } = require('../controller/dashboardController');
 const { getownDashboardStats } = require('../controller/ownerdashController');
@@ -11,7 +13,7 @@ const { createEmployeeRequest } = require('../controller/employeeRequestControll
 const { getPendingRequests } = require('../controller/employeeRequestController');
 const { updateRequestStatus } = require('../controller/employeeRequestController');
 const { getAllRequests } = require('../controller/employeeRequestController');
-const { getAttendanceAdvanceReport } = require('../controller/employeeRequestController');
+const { getAttendanceAdvanceReport, saveSalaryReport } = require('../controller/employeeRequestController');
 const { getSalaryComponents } = require('../controller/salarycomponentsController');
 const { createSalaryComponents } = require('../controller/salarycomponentsController');
 const { updateSalaryComponent } = require('../controller/salarycomponentsController');
@@ -26,6 +28,7 @@ const { saveLeaveSummary } = require('../controller/employeeController');
 const { saveWorkSummary } = require('../controller/employeeController');
 const { getAllLeaveAndWorkSummary } = require('../controller/employeeController');
 const { checkAttendance } = require('../controller/attendanceController');
+const { getAttendanceAdvancedetailReport } = require('../controller/attendancereportController');
 const {
     addShift,
     updateShift,
@@ -33,7 +36,7 @@ const {
     getAllShifts,
     checkShift
 } = require('../controller/shiftController');
-
+const { registerUser, loginUser, forgotPassword, requestPassword } = require('../controller/loginController');
 
 
 
@@ -69,9 +72,16 @@ router.put('/shift/:id', updateShift);
 router.delete('/shift/:id', deleteShift);
 router.get('/shift', getAllShifts);
 router.get('/employee/shift/check', checkShift);
+router.post('/salary/pay', saveSalaryReport);
+router.get('/attendance/advance-report', getAttendanceAdvancedetailReport);
+router.get('/attendance/grid-summary', gridSummary);
+router.get('/attendance/details', attendanceDetails);
+router.post('/auth/register', registerUser);
+router.post('/auth/login', loginUser);
+router.post('/auth/forgot-password', forgotPassword);
+router.post('/auth/forgot-password-request', requestPassword);
 
-
-module.exports = router;
+module.exports = router
 
 
 // CREATE TABLE employee_requests (
@@ -81,3 +91,5 @@ module.exports = router;
 //   reason TEXT,
 //   date DATE
 // );
+
+//npm install exceljs --save

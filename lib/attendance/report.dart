@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class AttendanceAdvanceReportScreen extends StatefulWidget {
   const AttendanceAdvanceReportScreen({super.key});
@@ -32,7 +35,6 @@ class _AttendanceAdvanceReportScreenState
   Future<void> fetchReport() async {
     setState(() => isLoading = true);
 
-    // Compute start and end date for selected month
     final startDate = DateTime(selectedYear, selectedMonth, 1);
     final endDate = DateTime(selectedYear, selectedMonth + 1, 0);
 
@@ -59,6 +61,71 @@ class _AttendanceAdvanceReportScreenState
     } catch (e) {
       debugPrint("Error: $e");
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> paySalary(Map<String, dynamic> emp) async {
+    try {
+      final url = Uri.parse('http://localhost:3000/api/employee/salary/pay');
+
+      // Safely cast components_breakup to a List
+      final components = List<Map<String, dynamic>>.from(
+        emp['components_breakup'] as List<dynamic>? ?? [],
+      );
+
+      final body = {
+        'employeeId': emp['employee_id'],
+        'year': selectedYear,
+        'month': selectedMonth,
+        'basicSalary': double.tryParse(emp['basic_salary'].toString()) ?? 0.0,
+        'grossSalary': double.tryParse(emp['gross_salary'].toString()) ?? 0.0,
+        'netSalary': double.tryParse(emp['net_salary'].toString()) ?? 0.0,
+        'totalAllowances':
+            components.where((c) => c['type'] == 'Allowance').fold<double>(
+                  0.0,
+                  (double sum, Map<String, dynamic> c) =>
+                      sum + (double.tryParse(c['amount'].toString()) ?? 0.0),
+                ),
+        'totalDeductions':
+            components.where((c) => c['type'] == 'Deduction').fold<double>(
+                  0.0,
+                  (double sum, Map<String, dynamic> c) =>
+                      sum + (double.tryParse(c['amount'].toString()) ?? 0.0),
+                ),
+        'absentDeduction':
+            double.tryParse(emp['absent_deduction'].toString()) ?? 0.0,
+        'leaveDeduction':
+            double.tryParse(emp['leave_deduction'].toString()) ?? 0.0,
+        'lateDeduction':
+            double.tryParse(emp['late_deduction'].toString()) ?? 0.0,
+        'overtimeAddition':
+            double.tryParse(emp['overtime_addition'].toString()) ?? 0.0,
+        'totalAdvance': double.tryParse(emp['total_advance'].toString()) ?? 0.0,
+        'paid': true,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Salary paid for ${emp['full_name']}.")),
+        );
+        fetchReport();
+      } else {
+        debugPrint(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to pay salary.")),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error occurred while paying salary.")),
+      );
     }
   }
 
@@ -89,7 +156,6 @@ class _AttendanceAdvanceReportScreenState
     return Scaffold(
       backgroundColor: const Color(0xFFEFF2F7),
       appBar: AppBar(
-
         automaticallyImplyLeading: true,
         title: _buildTitleBar(),
       ),
@@ -109,6 +175,8 @@ class _AttendanceAdvanceReportScreenState
                     child: ListView(
                       padding: const EdgeInsets.all(16),
                       children: reportData.map<Widget>((emp) {
+                        final paid = emp['paid'] == true;
+                        final paidDate = emp['paid_date'];
                         return Card(
                           elevation: 4,
                           margin: const EdgeInsets.symmetric(vertical: 12),
@@ -139,29 +207,55 @@ class _AttendanceAdvanceReportScreenState
                                 ),
                               ],
                             ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Wrap(
-                                spacing: 20,
-                                runSpacing: 8,
-                                children: [
-                                  _miniStat("Dept", emp['department'] ?? ""),
-                                  _miniStat("Basic Salary",
-                                      "₹${emp['basic_salary']}"),
-                                  _miniStat("Shift Hours/Day",
-                                      emp['shift_hours_per_day'].toString()),
-                                  _miniStat("Present",
-                                      emp['total_present'].toString()),
-                                  _miniStat(
-                                      "Absent", emp['total_absent'].toString(),
-                                      color: Colors.red),
-                                  _miniStat(
-                                      "Leave", emp['total_leave'].toString(),
-                                      color: Colors.orange),
-                                ],
-                              ),
+                            subtitle: Wrap(
+                              spacing: 20,
+                              runSpacing: 8,
+                              children: [
+                                _miniStat("Dept", emp['department'] ?? ""),
+                                _miniStat(
+                                    "Basic Salary", "₹${emp['basic_salary']}"),
+                                _miniStat("Shift Hours/Day",
+                                    emp['shift_hours_per_day'].toString()),
+                                _miniStat(
+                                    "Present", emp['total_present'].toString()),
+                                _miniStat(
+                                    "Absent", emp['total_absent'].toString(),
+                                    color: Colors.red),
+                                _miniStat(
+                                    "Leave", emp['total_leave'].toString(),
+                                    color: Colors.orange),
+                                _miniStat(
+                                  "Status",
+                                  paid ? "Paid" : "Unpaid",
+                                  color: paid ? Colors.green : Colors.red,
+                                ),
+                              ],
                             ),
                             children: [
+                              if (paid && paidDate != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 24, bottom: 8),
+                                  child: Text(
+                                    "Paid on ${DateFormat.yMMMd().format(DateTime.parse(paidDate))}",
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              if (!paid)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 8),
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => paySalary(emp),
+                                    icon: const Icon(Icons.payment),
+                                    label: const Text("Pay Salary"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.teal,
+                                    ),
+                                  ),
+                                ),
                               Divider(color: Colors.grey.shade300),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -228,12 +322,10 @@ class _AttendanceAdvanceReportScreenState
       children: [
         const Text(
           "Attendance & Advance Report",
-          style: TextStyle(
-              color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const Spacer(),
         DropdownButton<int>(
-          //  dropdownColor: Colors.white,
           value: selectedMonth,
           items: _monthItems,
           onChanged: (value) {
@@ -244,12 +336,10 @@ class _AttendanceAdvanceReportScreenState
               });
             }
           },
-          //  style: const TextStyle(color: Colors.white),
           underline: Container(),
         ),
         const SizedBox(width: 8),
         DropdownButton<int>(
-          //   dropdownColor: Colors.white,
           value: selectedYear,
           items: _yearItems,
           onChanged: (value) {
@@ -260,11 +350,75 @@ class _AttendanceAdvanceReportScreenState
               });
             }
           },
-          //  style: const TextStyle(color: Colors.white),
           underline: Container(),
+        ),
+        const SizedBox(width: 16),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.download),
+          label: const Text("Export"),
+          onPressed: () => exportReport(),
         ),
       ],
     );
+  }
+
+  Future<void> exportReport() async {
+    // 0️⃣ Ask the user for a date range
+    final pickedRange = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDateRange: DateTimeRange(
+        start: DateTime(selectedYear, selectedMonth, 1),
+        end: DateTime(selectedYear, selectedMonth + 1, 0),
+      ),
+    );
+    if (pickedRange == null) {
+      // user cancelled
+      return;
+    }
+
+    // 1️⃣ Build date strings from their pick
+    final startStr = DateFormat('yyyy-MM-dd').format(pickedRange.start);
+    final endStr = DateFormat('yyyy-MM-dd').format(pickedRange.end);
+
+    // 2️⃣ Fetch the Excel bytes
+    final url =
+        Uri.parse("http://localhost:3000/api/employee/attendance/advance-report"
+            "?startDate=$startStr&endDate=$endStr&format=excel");
+    final response = await http.get(url);
+    if (response.statusCode != 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Export failed: ${response.statusCode}")));
+      return;
+    }
+    final bytes = response.bodyBytes;
+
+    // 3️⃣ Choose a place to save
+    Directory dir;
+    if (Platform.isWindows) {
+      try {
+        dir = (await getDownloadsDirectory())!;
+      } catch (_) {
+        final home = Platform.environment['USERPROFILE'] ??
+            Platform.environment['HOME']!;
+        dir = Directory(p.join(home, 'Downloads'));
+      }
+    } else if (Platform.isAndroid) {
+      dir = (await getExternalStorageDirectory())!;
+    } else {
+      dir = await getApplicationDocumentsDirectory();
+    }
+
+    // 4️⃣ Write to file
+    final fileName = 'attendance_${startStr}_to_$endStr.xlsx';
+    final filePath = p.join(dir.path, fileName);
+    final file = File(filePath);
+    await file.writeAsBytes(bytes);
+
+    // 5️⃣ Notify user
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text("Report saved to:\n$filePath")));
   }
 
   Widget _miniStat(String label, String value, {Color? color}) {
@@ -393,6 +547,7 @@ class _AttendanceAdvanceReportScreenState
     }).toList();
   }
 }
+
 
 
 //TABLE VIEW

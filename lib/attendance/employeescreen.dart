@@ -50,7 +50,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Employees"),
-
+        backgroundColor: const Color(0xFF1A237E),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -500,7 +500,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(empData['full_name'] ?? ''),
-  
+        backgroundColor: const Color(0xFF1A237E),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showRequestDialog,

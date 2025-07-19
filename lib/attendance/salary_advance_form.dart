@@ -131,7 +131,7 @@ class _SalaryAdvanceFormState extends State<SalaryAdvanceForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Salary Advance Entry"),
-
+        backgroundColor: const Color(0xFF2E3B55),
       ),
       backgroundColor: const Color(0xFFF4F4F4),
       body: isLoading

@@ -123,7 +123,7 @@ class _SalaryComponentsMasterState extends State<SalaryComponentsMaster> {
     return Scaffold(
       backgroundColor: const Color(0xFFEFF2F7),
       appBar: AppBar(
- 
+        backgroundColor: const Color(0xFF2E3B55),
         title: const Text(
           "Salary Components Master",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

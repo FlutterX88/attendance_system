@@ -68,7 +68,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-
+        backgroundColor: const Color(0xFF2E3B55),
         automaticallyImplyLeading: true,
         title: Container(
           height: 60,

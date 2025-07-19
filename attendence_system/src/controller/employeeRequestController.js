@@ -190,6 +190,9 @@ const getAttendanceAdvanceReport = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
 
+        const year = new Date(startDate).getFullYear();
+        const month = new Date(startDate).getMonth() + 1;
+
         // Fetch all employees
         const empResult = await pool.query(`
       SELECT id, full_name, department, basic_salary
@@ -199,8 +202,7 @@ const getAttendanceAdvanceReport = async (req, res) => {
         const employees = empResult.rows;
 
         // Fetch all attendance records in range
-        const attendanceResult = await pool.query(
-            `
+        const attendanceResult = await pool.query(`
       SELECT
           employee_id,
           date,
@@ -209,9 +211,7 @@ const getAttendanceAdvanceReport = async (req, res) => {
           out_time
       FROM attendance
       WHERE date BETWEEN $1 AND $2
-      `,
-            [startDate, endDate]
-        );
+    `, [startDate, endDate]);
 
         // Fetch salary components
         const compResult = await pool.query(`
@@ -222,21 +222,17 @@ const getAttendanceAdvanceReport = async (req, res) => {
         const componentsList = compResult.rows;
 
         // Fetch salary advances
-        const advanceResult = await pool.query(
-            `
+        const advanceResult = await pool.query(`
       SELECT
           employee_id,
           date,
           amount
       FROM salary_advances
       WHERE date BETWEEN $1 AND $2
-      `,
-            [startDate, endDate]
-        );
+    `, [startDate, endDate]);
 
         // Fetch leave summary for the report year
-        const leaveSummaryResult = await pool.query(
-            `
+        const leaveSummaryResult = await pool.query(`
       SELECT
           employee_id,
           leave_type,
@@ -246,29 +242,21 @@ const getAttendanceAdvanceReport = async (req, res) => {
           carry_forward
       FROM employee_leave_summary
       WHERE year = $1
-      `,
-            [new Date(startDate).getFullYear()]
-        );
+    `, [year]);
 
         // Fetch overtime entries
-        const overtimeResult = await pool.query(
-            `
+        const overtimeResult = await pool.query(`
       SELECT employee_id, date, extra_hours
       FROM employee_overtime
       WHERE date BETWEEN $1 AND $2
-      `,
-            [startDate, endDate]
-        );
+    `, [startDate, endDate]);
 
         // Fetch less hours entries
-        const lessHoursResult = await pool.query(
-            `
+        const lessHoursResult = await pool.query(`
       SELECT employee_id, date, less_hours
       FROM employee_less_hours
       WHERE date BETWEEN $1 AND $2
-      `,
-            [startDate, endDate]
-        );
+    `, [startDate, endDate]);
 
         // Fetch all shifts for employees
         const shiftResult = await pool.query(`
@@ -276,7 +264,25 @@ const getAttendanceAdvanceReport = async (req, res) => {
       FROM employee_shifts
     `);
 
-        // Prepare maps for faster lookup
+        // Fetch salary report statuses
+        const salaryReportResult = await pool.query(`
+      SELECT
+        employee_id,
+        paid,
+        paid_date
+      FROM employee_salary_reports
+      WHERE year = $1 AND month = $2
+    `, [year, month]);
+
+        const salaryStatusMap = {};
+        for (const row of salaryReportResult.rows) {
+            salaryStatusMap[row.employee_id] = {
+                paid: row.paid,
+                paid_date: row.paid_date
+            };
+        }
+
+        // Prepare maps for fast lookup
         const attendanceMap = {};
         for (const row of attendanceResult.rows) {
             const dateStr = new Date(row.date).toISOString().split("T")[0];
@@ -337,21 +343,16 @@ const getAttendanceAdvanceReport = async (req, res) => {
             let overtimeHours = 0;
             let lessHours = 0;
 
-            // Determine employee's shift hours
-            let requiredHoursPerDay = 8; // Default
+            let requiredHoursPerDay = 8; // default
             const shift = shiftMap[emp.id];
             if (shift) {
-                const startParts = shift.start_time.split(":");
-                const endParts = shift.end_time.split(":");
-
                 const startDateTime = new Date(`2020-01-01T${shift.start_time}:00Z`);
                 const endDateTime = new Date(`2020-01-01T${shift.end_time}:00Z`);
-
                 let hoursDiff =
                     (endDateTime - startDateTime) / (1000 * 60 * 60);
 
                 if (hoursDiff < 0) {
-                    hoursDiff += 24; // Night shift crossing midnight
+                    hoursDiff += 24;
                 }
                 requiredHoursPerDay = hoursDiff || 8;
             }
@@ -398,7 +399,7 @@ const getAttendanceAdvanceReport = async (req, res) => {
             const perDaySalary = Number(emp.basic_salary) / monthDays;
             const perHourSalary = perDaySalary / requiredHoursPerDay;
 
-            // ----- LEAVE ADJUSTMENT -----
+            // LEAVE ADJUSTMENT
             let unpaidLeave = 0;
             let leaveAdjustmentDetails = [];
 
@@ -439,7 +440,6 @@ const getAttendanceAdvanceReport = async (req, res) => {
             const totalDeduction =
                 absentDeduction + leaveDeduction + lateDeduction;
 
-            // Calculate gross salary including components
             let grossSalary = Number(emp.basic_salary);
             const componentsBreakup = [];
 
@@ -451,10 +451,7 @@ const getAttendanceAdvanceReport = async (req, res) => {
                     name: comp.name,
                     type: comp.component_type,
                     percentage: perc,
-                    amount:
-                        comp.component_type === "Allowance"
-                            ? amount
-                            : -amount,
+                    amount: comp.component_type === "Allowance" ? amount : -amount,
                 });
 
                 if (comp.component_type === "Allowance") {
@@ -466,6 +463,12 @@ const getAttendanceAdvanceReport = async (req, res) => {
 
             const netSalary =
                 grossSalary - totalDeduction - totalAdvance + overtimeAddition;
+
+            // Check paid status
+            const salaryStatus = salaryStatusMap[emp.id] || {
+                paid: false,
+                paid_date: null
+            };
 
             return {
                 employee_id: emp.id,
@@ -486,6 +489,8 @@ const getAttendanceAdvanceReport = async (req, res) => {
                 total_deduction: totalDeduction.toFixed(2),
                 gross_salary: grossSalary.toFixed(2),
                 net_salary: netSalary.toFixed(2),
+                paid: salaryStatus.paid,
+                paid_date: salaryStatus.paid_date,
                 components_breakup: componentsBreakup.map((c) => ({
                     name: c.name,
                     type: c.type,
@@ -506,6 +511,124 @@ const getAttendanceAdvanceReport = async (req, res) => {
     }
 };
 
+
+
+
+const saveSalaryReport = async (req, res) => {
+    try {
+        const {
+            employeeId,
+            year,
+            month,
+            basicSalary,
+            grossSalary,
+            netSalary,
+            totalAllowances,
+            totalDeductions,
+            absentDeduction,
+            leaveDeduction,
+            lateDeduction,
+            overtimeAddition,
+            totalAdvance,
+            paid
+        } = req.body;
+
+        // Check if salary report already exists
+        const check = await pool.query(
+            `SELECT id FROM employee_salary_reports
+       WHERE employee_id = $1 AND year = $2 AND month = $3`,
+            [employeeId, year, month]
+        );
+
+        if (check.rows.length > 0) {
+            // UPDATE existing record
+            await pool.query(
+                `UPDATE employee_salary_reports
+         SET 
+            basic_salary = $1,
+            gross_salary = $2,
+            net_salary = $3,
+            total_allowances = $4,
+            total_deductions = $5,
+            absent_deduction = $6,
+            leave_deduction = $7,
+            late_deduction = $8,
+            overtime_addition = $9,
+            total_advance = $10,
+            paid = $11,
+            paid_date = CASE WHEN $11 THEN NOW() ELSE NULL END
+         WHERE employee_id = $12 AND year = $13 AND month = $14`,
+                [
+                    basicSalary,
+                    grossSalary,
+                    netSalary,
+                    totalAllowances,
+                    totalDeductions,
+                    absentDeduction,
+                    leaveDeduction,
+                    lateDeduction,
+                    overtimeAddition,
+                    totalAdvance,
+                    paid,
+                    employeeId,
+                    year,
+                    month
+                ]
+            );
+        } else {
+            // INSERT new record
+            await pool.query(
+                `INSERT INTO employee_salary_reports
+         (
+           employee_id,
+           year,
+           month,
+           basic_salary,
+           gross_salary,
+           net_salary,
+           total_allowances,
+           total_deductions,
+           absent_deduction,
+           leave_deduction,
+           late_deduction,
+           overtime_addition,
+           total_advance,
+           paid,
+           paid_date
+         )
+         VALUES
+         (
+           $1, $2, $3,
+           $4, $5, $6,
+           $7, $8, $9, $10, $11, $12,
+           $13, $14,
+           CASE WHEN $14 THEN NOW() ELSE NULL END
+         )`,
+                [
+                    employeeId,
+                    year,
+                    month,
+                    basicSalary,
+                    grossSalary,
+                    netSalary,
+                    totalAllowances,
+                    totalDeductions,
+                    absentDeduction,
+                    leaveDeduction,
+                    lateDeduction,
+                    overtimeAddition,
+                    totalAdvance,
+                    paid
+                ]
+            );
+        }
+
+        res.json({ message: "Salary report saved successfully." });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Failed to save salary report." });
+    }
+};
 
 
 
@@ -544,7 +667,7 @@ module.exports = {
     getPendingRequests,
     updateRequestStatus,
     getAllRequests,
-    getAttendanceAdvanceReport
+    getAttendanceAdvanceReport, saveSalaryReport
 };
 
 

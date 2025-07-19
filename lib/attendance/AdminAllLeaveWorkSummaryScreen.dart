@@ -47,7 +47,7 @@ class _AdminAllLeaveWorkSummaryScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text("All Employees - Leave & Work Summary"),
-  
+        backgroundColor: const Color(0xFF2E3B55),
       ),
       backgroundColor: const Color(0xFFF4F4F4),
       body: isLoading

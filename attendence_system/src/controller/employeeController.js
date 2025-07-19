@@ -368,6 +368,7 @@ const saveLeaveSummary = async (req, res) => {
         res.status(500).json({ message: "Failed to save leave summary." });
     }
 };
+
 const saveWorkSummary = async (req, res) => {
     try {
         const {
@@ -405,6 +406,8 @@ const saveWorkSummary = async (req, res) => {
         res.status(500).json({ message: "Failed to save work summary." });
     }
 };
+
+
 
 
 

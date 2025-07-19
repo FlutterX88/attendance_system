@@ -143,7 +143,7 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: true,
         title: const Text("Pending Requests"),
-
+        backgroundColor: const Color(0xFF2E3B55),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

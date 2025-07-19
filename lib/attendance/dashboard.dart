@@ -2,18 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:attendance_system/attendance/AdminAllLeaveWorkSummaryScreen.dart';
-import 'package:attendance_system/attendance/SalaryComponentsViewScreen.dart';
-import 'package:attendance_system/attendance/admin_leave_work_screen.dart';
-import 'package:attendance_system/attendance/attendanceEntryForm.dart';
-import 'package:attendance_system/attendance/employeeShiftScreen.dart';
-import 'package:attendance_system/attendance/employeescreen.dart';
-import 'package:attendance_system/attendance/history.dart';
-import 'package:attendance_system/attendance/pending_request.dart';
-import 'package:attendance_system/attendance/registration_screen.dart';
-import 'package:attendance_system/attendance/report.dart';
-import 'package:attendance_system/attendance/salary_advance_form.dart';
-import 'package:attendance_system/attendance/salarycomponentsmaster.dart';
+import 'package:pms_plus/attendance/AdminAllLeaveWorkSummaryScreen.dart';
+import 'package:pms_plus/attendance/AttendanceSummaryScreen.dart';
+import 'package:pms_plus/attendance/SalaryComponentsViewScreen.dart';
+import 'package:pms_plus/attendance/admin_leave_work_screen.dart';
+import 'package:pms_plus/attendance/attendanceEntryForm.dart';
+import 'package:pms_plus/attendance/employeeShiftScreen.dart';
+import 'package:pms_plus/attendance/employeescreen.dart';
+import 'package:pms_plus/attendance/loginScreen.dart';
+import 'package:pms_plus/attendance/pending_request.dart';
+import 'package:pms_plus/attendance/registration_screen.dart';
+import 'package:pms_plus/attendance/report.dart';
+import 'package:pms_plus/attendance/salary_advance_form.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,11 +26,24 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool isLoading = true;
   Map<String, dynamic> dashboardData = {};
+  String? userName;
+  String? userRole;
+  String? loginTime;
 
   @override
   void initState() {
     super.initState();
+    loadSession();
     fetchDashboardData();
+  }
+
+  Future<void> loadSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('full_name') ?? "";
+      userRole = prefs.getString('role') ?? "";
+      loginTime = prefs.getString('login_time');
+    });
   }
 
   Future<void> fetchDashboardData() async {
@@ -44,7 +58,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       } else {
         debugPrint("Failed to load dashboard data");
-        print(response.body);
         setState(() => isLoading = false);
       }
     } catch (e) {
@@ -53,237 +66,368 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  String formatLoginTime(String? time) {
+    if (time == null || time.isEmpty) return "Unknown";
+    final dt = DateTime.parse(time);
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildDrawer(context),
       appBar: AppBar(
         title: const Text("Owner Dashboard"),
         centerTitle: true,
-        actions: [
-          IconButton(
-              tooltip: "Shift Assign",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const EmployeeShiftScreen()));
-              },
-              icon: const Icon(Icons.shopify)),
-          IconButton(
-              tooltip: "All leave work summery",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const AdminAllLeaveWorkSummaryScreen()));
-              },
-              icon: const Icon(Icons.monitor)),
-          IconButton(
-              tooltip: "Assign Leave",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const AdminAssignLeaveWorkScreen()));
-              },
-              icon: const Icon(Icons.admin_panel_settings)),
-          IconButton(
-              tooltip: "Salary Components View",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const SalaryComponentsViewScreen()));
-              },
-              icon: const Icon(Icons.percent)),
-          IconButton(
-              tooltip: "Salary Components Add",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SalaryComponentsMaster()));
-              },
-              icon: const Icon(Icons.compost_outlined)),
-          IconButton(
-              tooltip: "Salary Report",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            const AttendanceAdvanceReportScreen()));
-              },
-              icon: const Icon(Icons.report)),
-          IconButton(
-              tooltip: "ALL Request",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AllRequestsScreen()));
-              },
-              icon: const Icon(Icons.report_gmailerrorred)),
-          IconButton(
-              tooltip: "Pending Request",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PendingRequestsScreen()));
-              },
-              icon: const Icon(Icons.request_page)),
-          IconButton(
-              tooltip: "Registration Screen",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const RegistrationScreen()));
-              },
-              icon: const Icon(Icons.app_registration)),
-          IconButton(
-              tooltip: "Attendance Entry",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AttendanceEntryForm()));
-              },
-              icon: const Icon(Icons.lock_clock)),
-          IconButton(
-              tooltip: "Employee List",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const EmployeeListScreen()));
-              },
-              icon: const Icon(Icons.list_alt)),
-          IconButton(
-              tooltip: "Salary Advance Entry",
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const SalaryAdvanceForm()));
-              },
-              icon: const Icon(Icons.leaderboard))
-        ],
+        elevation: 1,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _buildStatCard(
-                          "Total Employees",
-                          dashboardData['totalEmployees'].toString(),
-                          Colors.indigo),
-                      _buildStatCard(
-                          "Present Today",
-                          dashboardData['presentToday'].toString(),
-                          Colors.green),
-                      _buildStatCard("Absent Today",
-                          dashboardData['absentToday'].toString(), Colors.red),
-                      _buildStatCard(
-                          "On Leave Today",
-                          dashboardData['leaveToday'].toString(),
-                          Colors.orange),
-                    ],
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (userName != null && userName!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                "Logged in as: $userName ($userRole) at ${formatLoginTime(loginTime)}",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          _buildSectionTitle("Today's Summary"),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              _buildTile(
+                                title: "Total Employees",
+                                value:
+                                    dashboardData['totalEmployees'].toString(),
+                                icon: Icons.people_alt,
+                                color: Colors.indigo,
+                              ),
+                              _buildTile(
+                                title: "Present Today",
+                                value: dashboardData['presentToday'].toString(),
+                                icon: Icons.person,
+                                color: Colors.green,
+                              ),
+                              _buildTile(
+                                title: "Absent Today",
+                                value: dashboardData['absentToday'].toString(),
+                                icon: Icons.person,
+                                color: Colors.red,
+                              ),
+                              _buildTile(
+                                title: "On Leave Today",
+                                value: dashboardData['leaveToday'].toString(),
+                                icon: Icons.beach_access,
+                                color: Colors.orange,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 32),
+                          _buildSectionTitle("Monthly Stats"),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              _buildTile(
+                                title: "Total Salary Paid",
+                                value:
+                                    "₹${dashboardData['totalSalaryThisMonth']}",
+                                icon: Icons.attach_money,
+                                color: Colors.teal,
+                              ),
+                              _buildTile(
+                                title: "Total Advances",
+                                value:
+                                    "₹${dashboardData['totalAdvanceThisMonth']}",
+                                icon: Icons.account_balance_wallet,
+                                color: Colors.purple,
+                              ),
+                              _buildTile(
+                                title: "Total Work Hours",
+                                value:
+                                    "${dashboardData['totalOvertimeThisMonth']} hrs",
+                                icon: Icons.timelapse,
+                                color: Colors.blue,
+                              ),
+                              _buildTile(
+                                title: "Late Marks Today",
+                                value:
+                                    dashboardData['totalLateToday'].toString(),
+                                icon: Icons.warning_amber,
+                                color: Colors.deepOrange,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 32),
+                          if (dashboardData['recentEmployees']?.isNotEmpty ??
+                              false)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle(
+                                    "Recently Registered Employees"),
+                                const SizedBox(height: 12),
+                                ...dashboardData['recentEmployees']
+                                    .map<Widget>((emp) {
+                                  return Card(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    elevation: 1,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.person,
+                                          color: Colors.indigo),
+                                      title: Text(
+                                        emp['full_name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Text(emp['department']),
+                                      trailing: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text("Joined"),
+                                          Text(
+                                            emp['join_date'],
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                          const SizedBox(height: 32),
+                          if (dashboardData['recentAdvances']?.isNotEmpty ??
+                              false)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle("Recent Salary Advances"),
+                                const SizedBox(height: 12),
+                                ...dashboardData['recentAdvances']
+                                    .map<Widget>((adv) {
+                                  return Card(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    elevation: 1,
+                                    child: ListTile(
+                                      leading: const Icon(Icons.attach_money,
+                                          color: Colors.green),
+                                      title: Text(
+                                        adv['employee_name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Text(
+                                          "₹${adv['amount']} • ${adv['payment_mode']}"),
+                                      trailing: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Text("Date"),
+                                          Text(
+                                            adv['date'],
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 24),
-                  _buildInfoCard("Total Salary Paid This Month",
-                      "₹${dashboardData['totalSalaryThisMonth']}", Colors.teal),
-                  _buildInfoCard(
-                      "Total Advances Given This Month",
-                      "₹${dashboardData['totalAdvanceThisMonth']}",
-                      Colors.purple),
-                  _buildInfoCard(
-                      "Total Work Hours This Month",
-                      "${dashboardData['totalOvertimeThisMonth']} hrs",
-                      Colors.blue),
-                  _buildInfoCard(
-                      "Total Late Marks Today",
-                      dashboardData['totalLateToday'].toString(),
-                      Colors.deepOrange),
-                  const SizedBox(height: 24),
-                  Text("Recently Registered Employees",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          )),
-                  ...List.generate(
-                      dashboardData['recentEmployees']?.length ?? 0, (index) {
-                    final emp = dashboardData['recentEmployees'][index];
-                    return ListTile(
-                      title: Text(emp['full_name']),
-                      subtitle: Text(emp['department']),
-                      trailing: Text(emp['join_date']),
-                    );
-                  }),
-                  const SizedBox(height: 24),
-                  Text("Recent Salary Advances",
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          )),
-                  ...List.generate(dashboardData['recentAdvances']?.length ?? 0,
-                      (index) {
-                    final adv = dashboardData['recentAdvances'][index];
-                    return ListTile(
-                      title: Text(adv['employee_name']),
-                      subtitle:
-                          Text("₹${adv['amount']} • ${adv['payment_mode']}"),
-                      trailing: Text(adv['date']),
-                    );
-                  }),
-                ],
-              ),
+                );
+              },
             ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color) {
+  Widget _buildTile({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
-      width: 160,
-      padding: const EdgeInsets.all(16),
+      width: 220,
+      height: 150,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: color, fontSize: 14)),
-          const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 20, color: color)),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          )
         ],
       ),
     );
   }
 
-  Widget _buildInfoCard(String title, String value, Color color) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        trailing: Text(value,
-            style: TextStyle(
-                fontSize: 16, color: color, fontWeight: FontWeight.bold)),
+  Widget _buildSectionTitle(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            child: const Text(
+              "Owner Panel",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          _drawerItem(Icons.dashboard, "Dashboard", () {
+            Navigator.pop(context);
+          }),
+          _drawerItem(Icons.summarize, "Attendance Summary", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AttendanceSummaryScreen()));
+          }),
+          _drawerItem(Icons.schedule, "Shift Assign", () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const EmployeeShiftScreen()));
+          }),
+          _drawerItem(Icons.beach_access, "All Leave Work Summary", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AdminAllLeaveWorkSummaryScreen()));
+          }),
+          _drawerItem(Icons.admin_panel_settings, "Assign Leave", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AdminAssignLeaveWorkScreen()));
+          }),
+          _drawerItem(Icons.percent, "Salary Components View", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const SalaryComponentsViewScreen()));
+          }),
+          _drawerItem(Icons.list_alt, "Employee List", () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const EmployeeListScreen()));
+          }),
+          _drawerItem(Icons.app_registration, "Registration", () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RegistrationScreen()));
+          }),
+          _drawerItem(Icons.lock_clock, "Attendance Entry", () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const AttendanceEntryForm()));
+          }),
+          _drawerItem(Icons.leaderboard, "Salary Advance Entry", () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const SalaryAdvanceForm()));
+          }),
+          _drawerItem(Icons.report, "Pending Request", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PendingRequestsScreen()));
+          }),
+          _drawerItem(Icons.report, "Salary Report", () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const AttendanceAdvanceReportScreen()));
+          }),
+          _drawerItem(Icons.logout, "Logout", () async {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.clear();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
+          }),
+        ],
       ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String text, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.indigo),
+      title: Text(
+        text,
+        style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).textTheme.bodyLarge?.color),
+      ),
+      onTap: onTap,
     );
   }
 }

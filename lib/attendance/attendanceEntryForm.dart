@@ -27,7 +27,7 @@ class _AttendanceEntryFormState extends State<AttendanceEntryForm> {
 
   List<dynamic> employees = [];
 
-  final List<String> statusOptions = ['Present', 'Absent', "Leave"];
+  final List<String> statusOptions = ['Present', 'Absent'];
   final TextEditingController _inTimeController = TextEditingController();
   final TextEditingController _outTimeController = TextEditingController();
 
@@ -139,6 +139,11 @@ class _AttendanceEntryFormState extends State<AttendanceEntryForm> {
             outTimeEnabled = true;
             isExistingRecord = true;
             selectedStatus = data['status'];
+
+            if (selectedStatus == "Leave") {
+              statusOptions.remove("Leave");
+              statusOptions.add("Leave");
+            }
 
             if (data['status'] == 'Present') {
               if (data['in_time'] != null) {
@@ -293,7 +298,7 @@ class _AttendanceEntryFormState extends State<AttendanceEntryForm> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Attendance Entry"),
-    
+        backgroundColor: const Color(0xFF2E3B55),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
