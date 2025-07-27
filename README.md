@@ -19,6 +19,46 @@ An open-source **Flutter** application for managing employee attendance, built t
 
 ---
 
+## 📸 Screenshots
+
+### 🔐 Login Screen  
+![Login](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/login.PNG)
+
+### 📝 Register Screen  
+![Register](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/REGISTER.PNG)
+
+### 📊 Dashboard  
+![Dashboard](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/dashboard.PNG)
+
+### 👤 Employee Dashboard  
+![Employee Dashboard](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/empdash.PNG)
+
+### 🧾 Attendance Entry  
+![Attendance Entry](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/attendance_entry.PNG)
+
+### 📅 Attendance Summary  
+![Attendance Summary](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/attendance_summery.PNG)
+
+### 👥 Employee Details  
+![Employee Details](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/employee_details.PNG)
+
+### 🧩 Components  
+![Components](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/components.PNG)
+
+### 📝 Leave Assign  
+![Leave Assign](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/leave_assign.PNG)
+
+### 📈 Overview  
+![Overview](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/overview.PNG)
+
+### 💸 Salary Advance  
+![Salary Advance](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/salary_advance.PNG)
+
+### 📑 Details  
+![Details](https://github.com/FlutterX88/attendance_system/blob/main/assets/images/details.PNG)
+
+---
+
 ## 🎯 Why Use This Project?
 
 - Built entirely in Flutter – single codebase for mobile apps  
