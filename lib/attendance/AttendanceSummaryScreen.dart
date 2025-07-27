@@ -1,8 +1,8 @@
 import 'dart:convert';
 
+import 'package:attendance_system/attendance/AttendanceDetailScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pms_plus/attendance/AttendanceDetailScreen.dart';
 
 class AttendanceSummaryScreen extends StatefulWidget {
   const AttendanceSummaryScreen({super.key});

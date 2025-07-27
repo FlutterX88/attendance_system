@@ -2,9 +2,9 @@
 
 import 'dart:convert';
 
+import 'package:attendance_system/attendance/loginScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pms_plus/attendance/loginScreen.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   final String email;

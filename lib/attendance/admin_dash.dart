@@ -2,10 +2,10 @@
 
 import 'dart:convert';
 
+import 'package:attendance_system/attendance/attendanceEntryForm.dart';
+import 'package:attendance_system/attendance/salary_advance_form.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pms_plus/attendance/attendanceEntryForm.dart';
-import 'package:pms_plus/attendance/salary_advance_form.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import 'employeescreen.dart';

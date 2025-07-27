@@ -2,9 +2,10 @@
 
 import 'dart:convert';
 
+import 'package:attendance_system/attendance/new_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pms_plus/attendance/new_password_screen.dart';
+// ignore: depend_on_referenced_packages
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

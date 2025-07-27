@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:attendance_system/attendance/loginScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:pms_plus/attendance/loginScreen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
